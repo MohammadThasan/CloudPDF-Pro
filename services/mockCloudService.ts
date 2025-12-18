@@ -51,7 +51,7 @@ async function convertToEmbeddableImage(file: File): Promise<{ blob: Blob, isPng
 
 async function convertPdfToJpg(file: File, settings: OutputSettings): Promise<Blob> {
     try {
-        const arrayBuffer = await (file as any).arrayBuffer();
+        const arrayBuffer = await file.arrayBuffer();
         const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
         const numPages = pdf.numPages;
@@ -65,7 +65,7 @@ async function convertPdfToJpg(file: File, settings: OutputSettings): Promise<Bl
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             await page.render({ canvasContext: context, viewport }).promise;
-
+            
             const qualityMap = { low: 0.5, medium: 0.75, high: 0.95 };
             const quality = qualityMap[settings.imageQuality || 'high'];
 
@@ -116,11 +116,11 @@ export const processFile = async (file: File, tool: ToolDef, settings: OutputSet
 
     // Default basic handling for other tools using pdf-lib
     if (file.type === 'application/pdf') {
-        const arrayBuffer = await (file as any).arrayBuffer();
+        const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         await applyPdfSettings(pdfDoc, settings);
         const pdfBytes = await pdfDoc.save();
-        return { blob: new Blob([pdfBytes as any], { type: 'application/pdf' }) };
+        return { blob: new Blob([pdfBytes], { type: 'application/pdf' }) };
     }
 
     // Simple pass-through for unhandled cases
@@ -128,8 +128,8 @@ export const processFile = async (file: File, tool: ToolDef, settings: OutputSet
 };
 
 export const rotatePdfBlob = async (pdfBlob: Blob, rotationAmount: 90 | 180 | 270): Promise<Blob> => {
-    const arrayBuffer = await (pdfBlob as any).arrayBuffer();
+    const arrayBuffer = await pdfBlob.arrayBuffer();
     const pdfDoc = await PDFDocument.load(arrayBuffer);
     pdfDoc.getPages().forEach(p => p.setRotation(degrees((p.getRotation().angle + rotationAmount) % 360)));
-    return new Blob([await pdfDoc.save() as any], { type: 'application/pdf' });
+    return new Blob([await pdfDoc.save()], { type: 'application/pdf' });
 };
